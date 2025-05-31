@@ -9,8 +9,8 @@ import inspect
 import re
 
 class Agent:
-    def __init__(self, model_name: str = "gpt-3.5-turbo", temperature: float = 0.7):
-        #self.llm = ChatOpenAI(model_name=model_name, temperature=temperature)
+    def __init__(self, model_name: str = "gpt-3.5-turbo", temperature: float = 0.1):
+        self.llm = ChatOpenAI(model_name=model_name, temperature=temperature)
         self.context = {}
         self.registered_class = {}
         self.method_docs = {}
@@ -134,7 +134,8 @@ class Agent:
             User query: {user_query}
             
             Instructions:
-            - Choose the most relevant class from the list.
+            - Choose the most relevant class from the List of classes.
+            - Only choose from the List of classes provided and do not generate your own response. Do not rename a class just use the exact name of the class
             - If a class is not relevant do not include it in the answer
             - You are provided with classes and their descriptions about what the classes are supposed to do. 
             - The expected response is just a list of class names. Not their desctiption. 
@@ -148,10 +149,13 @@ class Agent:
 
         )
         classes_desc = "\n".join(
-            [f"{cls['class_name']}: {cls['class_description']}" for cls in self.context.get("classes", [])]
+            [f"Name of Classes:{cls['class_name']}, Description of class:{cls['class_description']}" for cls in self.context.get("classes", [])]
         )
+        print(classes_desc)
+        breakpoint()
         message = HumanMessage(
-                content = prompt.format(user_query = query, classes = classes_desc)
+                content = prompt.format(classes = classes_desc, user_query = query)
             )
         
-        print(message.content)
+        resp = self.llm([message]).content.strip()
+        print(resp)
