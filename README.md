@@ -72,18 +72,14 @@ Edit
 
 ## 📂 Directory Structure
 
-AutoClass/
-├── Agent.py # Core Agent logic with LLM and execution engine
-├── example.py # Demo file to test queries and flow
-├── classes/
-│ ├── ArithmeticOperations.py
-│ └── StringUtils.py
-├── venv/ # Python virtual environment
-└── README.md
-
-yaml
-Copy
-Edit
+.
+├── AutoClass
+│   ├── Agent.py
+│   └── ui.py
+├── example.py
+├── LICENSE.md
+├── README.md
+└── requirements.txt
 
 ---
 
@@ -99,6 +95,7 @@ pip install -r requirements.txt
 python example.py
 ```
 ---
+
 ## 📌 Roadmap
  LLM-powered class and method selection
 
