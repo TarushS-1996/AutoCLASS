@@ -18,20 +18,16 @@
 
 Perform the necessary operations for this: 5 * 2 + 6 / 4
 
-markdown
-Copy
-Edit
+
 
 AutoClass will:
 1. Select the relevant `ArithmeticOperations` methods: `multiply`, `divide`, `add`.
 2. Chain them as:
+```
 multiply(a=5, b=2)
 divide(a=6, b=4)
-add(a=multiply_result, b=divide_result)
+add(a=multiply_result, b=divide_result)```
 
-yaml
-Copy
-Edit
 3. Execute in the correct order and return the final result.
 
 ---
@@ -101,9 +97,7 @@ python example.py
 
  Dependency-aware execution engine
 
- Graph-based visualization of execution
-
- LangGraph + memory tracing
+ Graph-based method and class selection and execution
 
  Web frontend or CLI pipeline inspector
 
