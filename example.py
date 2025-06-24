@@ -110,7 +110,7 @@ class ArithmeticOperations:
     
 
 if __name__ == "__main__":
-    query = input("Query")
+    query = input("Query: ")
     ex = ArithmeticOperations()
     st = StringUtils()
     ag = Agent()
@@ -121,4 +121,7 @@ if __name__ == "__main__":
     ag.llm_choose_class_method(query=query)
     ag.llm_determine_input_parameters(query = query)
     print(json.dumps(ag.get_current_pipeline(), indent = 4))
+    pipeline = ag.get_current_pipeline()
+    results = ag.run_pipeline_with_dependencies(pipeline=pipeline)
+    print(results)
 

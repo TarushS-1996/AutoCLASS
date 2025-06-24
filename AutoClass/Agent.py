@@ -156,6 +156,8 @@ class Agent:
                 - Do not rename, add, or drop any keys.
                 - Only fill in the `inputs` dictionaries using values that are clearly present or implied in the query.
                 - Do not modify method or class structure. Keep the output format identical to the context structure — just fill in the values in the `inputs`.
+                - If an output of one method is supposed to act as input for other method, have the input for that method reflect in the format of: ClassName.methodName
+
 
                 Expected Output format:
                 {{
@@ -276,3 +278,85 @@ class Agent:
                     "methods": selected_methods
                 })
         return pruned_context
+    
+    def run_pipeline_with_dependencies(self, pipeline=None, max_passes=5):
+        """
+        Executes a structured pipeline that may include method dependencies.
+        Respects dependency ordering using "Class.method" notation in inputs.
+        """
+        pipeline = pipeline or self.pipeline
+        results = {}
+        context = self.context
+        unresolved_methods = []
+        executed = set()
+
+        # Flatten all method steps
+        steps = []
+        for cls in pipeline.get("classes", []):
+            class_name = cls["class_name"]
+            instance = self.registered_class.get(class_name)
+            if not instance:
+                print(f"❌ Class '{class_name}' is not registered.")
+                continue
+            for method in cls["methods"]:
+                steps.append({
+                    "class": class_name,
+                    "instance": instance,
+                    "method_name": method["method"],
+                    "inputs": method["inputs"]
+                })
+
+        # Resolve dependencies in multiple passes
+        for _ in range(max_passes):
+            progress = False
+            remaining = []
+
+            for step in steps:
+                key = f"{step['class']}.{step['method_name']}"
+                if key in executed:
+                    continue
+
+                resolved_inputs = {}
+                inputs = step["inputs"]
+                can_execute = True
+
+                for param, val in inputs.items():
+                    if isinstance(val, (int, float, str)) and not isinstance(val, str) or "." not in str(val):
+                        resolved_inputs[param] = val
+                    elif isinstance(val, str) and val in results:
+                        resolved_inputs[param] = results[val]
+                    elif isinstance(val, str) and val in context:
+                        resolved_inputs[param] = context[val]
+                    else:
+                        can_execute = False
+                        break
+
+                if can_execute:
+                    try:
+                        method_fn = getattr(step["instance"], step["method_name"])
+                        print(f"🚀 Executing {key} with inputs: {resolved_inputs}")
+                        output = method_fn(**resolved_inputs)
+
+                        results[key] = output
+                        context[key] = output
+                        if isinstance(output, dict):
+                            context.update(output)
+
+                        executed.add(key)
+                        progress = True
+                    except Exception as e:
+                        print(f"❌ Error executing {key}: {e}")
+                else:
+                    remaining.append(step)
+
+            if not progress:
+                break
+            steps = remaining
+
+        # Final report
+        if remaining:
+            print("\n⚠️ Unresolved methods due to missing inputs or errors:")
+            for r in remaining:
+                print(f" - {r['class']}.{r['method_name']} (inputs: {r['inputs']})")
+
+        return results   
