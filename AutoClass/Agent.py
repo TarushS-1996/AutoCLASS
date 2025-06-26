@@ -10,7 +10,7 @@ import inspect
 import re
 
 class Agent:
-    def __init__(self, model_name: str = "gpt-4o-mini", temperature: float = 0.1):
+    def __init__(self, model_name: str = "gpt-4o-mini", temperature: float = 0.7):
         self.llm = ChatOpenAI(model_name=model_name, temperature=temperature)
         self.context = {}
         self.registered_class = {}
@@ -152,11 +152,13 @@ class Agent:
                 {query}
 
                 Instructions:
-                - For each class and method, check if any input values can be determined directly from the query.
-                - Do not rename, add, or drop any keys.
-                - Only fill in the `inputs` dictionaries using values that are clearly present or implied in the query.
-                - Do not modify method or class structure. Keep the output format identical to the context structure — just fill in the values in the `inputs`.
-                - If an output of one method is supposed to act as input for other method, have the input for that method reflect in the format of: ClassName.methodName
+
+                - For each method, check if its required inputs are directly provided in the query.
+                - If an input value is not found in the query, check if any previous method's output can be used instead.
+                - If a method depends on a previous result, represent that input as "ClassName.methodName".
+                - Only use such references if they logically make sense — do NOT force linking all methods.
+                - Preserve the structure: Do NOT rename keys, drop methods, or add extra fields.
+                - Your output should include ONLY the updated JSON pipeline structure with filled `inputs`.
 
 
                 Expected Output format:
@@ -221,6 +223,8 @@ class Agent:
                     'class_name1': ['method1', 'method2'],
                     'class_name2': ['method3']
                 }}
+                
+                4. If a output to a query depends on execution of a set of methods first, include them in the format of <class_name>.<method_name>
 
                 Rules:
                 - Only include classes that contain at least one relevant method.
